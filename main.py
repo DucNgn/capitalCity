@@ -3,6 +3,7 @@ import os, random
 #------------------process the csv file -----
 ctryListObj = open('country-list.csv')
 
+#The structure of content in the file
 structure = '"country","capital","type"'
 content = ctryListObj.read()
 listCountries = content.split('\n')
@@ -58,7 +59,9 @@ def answer(ctryName, captCity, correct):
         print('Your answer is incorrect')
         print(captCity + " is the capital city of " + ctryName)
 
-def displayMultChoice(answerList):
+#Display choices for user
+def displayMultChoice(answerList, quest):
+    print('The capital city of ' + quest + " is ?")
     print('\n[A] ' + answerList[0] + '\n'
          '[B] ' + answerList[1] + '\n'
          '[C] ' + answerList[2] + '\n'
@@ -70,7 +73,7 @@ def displayMultChoice(answerList):
   choice # 0 : search mode
   choice # 1 : guess capital city
   choice # 2 : guess the country name
-  
+  Multiple choice mode: True or False 
 '''
 def startQuiz(choiceNum, isMultChoice):
     
@@ -82,10 +85,11 @@ def startQuiz(choiceNum, isMultChoice):
         #Call support methods to search
         if searchCaptByCtry(search) is False and searchCtryByCapt(search) is False:
             print('No result found')
+            return
             
+
     #Enter Quiz mode
     if isMultChoice is True:
-        
         #Generate multiple choice answers
         choices = dict()
         for i in range(4):
@@ -98,17 +102,33 @@ def startQuiz(choiceNum, isMultChoice):
                 choices.setdefault(ctryName, captCity)
 
         if choiceNum == 1:
+            #Quest: Country name
             quest = random.choice(list(choices.keys()))
-            print('The capital city of ' + ctryName + " is ?")
-            displayMultChoice(list(choices.values()))
+            displayMultChoice(list(choices.values()), quest)
 
-            keyIn = input()
+            while True:
+                keyIn = input()
+                convertChar = -1
+                if   keyIn.lower() == 'a':
+                    convertChar = 0
+                    break
+                elif keyIn.lower() == 'b':
+                    convertChar = 1
+                    break
+                elif keyIn.lower() == 'c':
+                    convertChar = 2
+                    break
+                elif keyIn.lower() == 'd':
+                    convertChar = 3
+                    break
+                else:
+                    print('Invalid input. Try again')
             
+            if list(choices.keys)[convertChar] == quest:
+                print('Congratulation')
+                
 
-
-
-
-    
+            
     else:
         #Generate random keys and values
         ctryName = random.choice(list(ctryDict.keys()))
@@ -133,8 +153,5 @@ def startQuiz(choiceNum, isMultChoice):
             else:
                 answer(ctryName, captCity, False)
                 return False
-     
 
-
-startQuiz(1, False)
-
+startQuiz(1, True)                
