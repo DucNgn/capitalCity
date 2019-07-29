@@ -60,12 +60,25 @@ def answer(ctryName, captCity, correct):
         print(captCity + " is the capital city of " + ctryName)
 
 #Display choices for user
-def displayMultChoice(answerList, quest):
-    print('The capital city of ' + quest + " is ?")
+def displayMultChoice(answerList):
     print('\n[A] ' + answerList[0] + '\n'
          '[B] ' + answerList[1] + '\n'
          '[C] ' + answerList[2] + '\n'
          '[D] ' + answerList[3] + '\n'    )
+
+#Convert choice character to number
+def convertChoice(keyIn):
+    if keyIn.lower() == 'a':
+        return 0
+    elif keyIn.lower() == 'b':
+        return 1
+    elif keyIn.lower() == 'c':
+        return 2
+    elif keyIn.lower() == 'd':
+        return 3
+    else: #Invalid input
+        return -1
+
 
 
 '''
@@ -86,53 +99,83 @@ def startQuiz(choiceNum, isMultChoice):
         if searchCaptByCtry(search) is False and searchCtryByCapt(search) is False:
             print('No result found')
             return
-            
+
 
     #Enter Quiz mode
+
+    #Generate question and answer for the quiz
+    ctryName = random.choice(list(ctryDict.keys()))
+    captCity = ctryDict[ctryName]
+            
     if isMultChoice is True:
-        #Generate multiple choice answers
-        choices = dict()
-        for i in range(4):
-            ctryName = random.choice(list(ctryDict.keys()))
-            captCity = ctryDict[ctryName]
-            #If the city name is already in the dict
-            if ctryName in choices:
-                i = i - 1
-            else:
-                choices.setdefault(ctryName, captCity)
+        answerList = list()
 
         if choiceNum == 1:
-            #Quest: Country name
-            quest = random.choice(list(choices.keys()))
-            displayMultChoice(list(choices.values()), quest)
 
+            for i in range(4):
+                tempCity = random.choice(list(ctryDict.values()))
+                if tempCity == captCity or tempCity in answerList:
+                    i = i - 1
+                else:
+                    answerList.append(tempCity)
+            
+            #Append the right answer
+            answerList[random.randint(0, 3)] = captCity
+
+            #Prompt
+            print('What is the capital city of ' + ctryName + " is ?")
+            displayMultChoice(answerList)
+
+            choiceNo = -1
             while True:
                 keyIn = input()
-                convertChar = -1
-                if   keyIn.lower() == 'a':
-                    convertChar = 0
-                    break
-                elif keyIn.lower() == 'b':
-                    convertChar = 1
-                    break
-                elif keyIn.lower() == 'c':
-                    convertChar = 2
-                    break
-                elif keyIn.lower() == 'd':
-                    convertChar = 3
-                    break
+                choiceNo = convertChoice(keyIn)
+                if  choiceNo == -1:
+                    print('Invalid input')
                 else:
-                    print('Invalid input. Try again')
-            
-            if list(choices.keys)[convertChar] == quest:
-                print('Congratulation')
-                
+                    break
 
-            
+            if answerList[choiceNo] == captCity:
+                answer(ctryName, captCity, True)
+                return True
+            else:
+                answer(ctryName, captCity, False)
+                return False
+
+        #Guess country name by capital city        
+        else:
+            for i in range(4):
+                tempCtry = random.choice(list(ctryDict.keys()))
+                if tempCtry == ctryName or tempCtry in answerList:
+                    i = i - 1
+                else:
+                    answerList.append(tempCtry)
+
+            #Append the right answer
+            answerList[random.randint(0, 3)] = ctryName
+
+            #Prompt
+            print(captCity + " is the capital city of which country?")
+            displayMultChoice(answerList)
+
+            choiceNo = -1
+            while True:
+                keyIn = input()
+                choiceNo = convertChoice(keyIn)
+                if  choiceNo == -1:
+                    print('Invalid input')
+                else:
+                    break
+
+            if answerList[choiceNo] == ctryName:
+                answer(ctryName, captCity, True)
+                return True
+            else:
+                answer(ctryName, captCity, False)
+                return False
+
     else:
         #Generate random keys and values
-        ctryName = random.choice(list(ctryDict.keys()))
-        captCity = ctryDict[ctryName]
         if choiceNum == 1:
             print('What is the capital city of ' + ctryName + " ?")
             keyIn = input()
@@ -154,4 +197,4 @@ def startQuiz(choiceNum, isMultChoice):
                 answer(ctryName, captCity, False)
                 return False
 
-startQuiz(1, True)                
+startQuiz(2, True)                
