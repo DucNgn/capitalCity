@@ -1,4 +1,5 @@
-import os, random
+import os, random, time
+from selenium import webdriver
 
 #------------------process the csv file -----
 ctryListObj = open('country-list.csv')
@@ -22,65 +23,6 @@ for each in listCountries:
 
 #------finish processing the csv file -----
 
-#Search country name by capital name and display results
-def searchCtryByCapt(captCity):
-    result = list()
-    for ctry, city in ctryDict.items():
-        if city.lower() == captCity.lower():
-            result.append(ctry)
-    
-    if len(result) == 0:
-        return False
-    else:
-        for each in result:
-            print("The capital city of the country " + each + " is the city of " + ctryDict[each])
-
-
-#Search capital name by country name and display results
-def searchCaptByCtry(ctryName):
-    result = list()
-    for ctry, city in ctryDict.items():
-        if ctry.lower() == ctryName.lower():
-            result.append(ctry)
-        
-    if len(result) == 0:
-        return False
-    else:
-        for each in result:
-            print("The capital city of the country " + each + " is the city of " + ctryDict[each])
-
-
-#Function to announce the correct answer
-def answer(ctryName, captCity, correct):
-    if correct is True:
-        print('Congratulation, your answer is correct !')
-        print(captCity + " is the capital city of " + ctryName)
-    else:
-        print('Your answer is incorrect')
-        print(captCity + " is the capital city of " + ctryName)
-
-#Display choices for user
-def displayMultChoice(answerList):
-    print('\n[A] ' + answerList[0] + '\n'
-         '[B] ' + answerList[1] + '\n'
-         '[C] ' + answerList[2] + '\n'
-         '[D] ' + answerList[3] + '\n'    )
-
-#Convert choice character to number
-def convertChoice(keyIn):
-    if keyIn.lower() == 'a':
-        return 0
-    elif keyIn.lower() == 'b':
-        return 1
-    elif keyIn.lower() == 'c':
-        return 2
-    elif keyIn.lower() == 'd':
-        return 3
-    else: #Invalid input
-        return -1
-
-
-
 '''
   Start the quiz with differerent modes
   choice # 0 : search mode
@@ -88,7 +30,10 @@ def convertChoice(keyIn):
   choice # 2 : guess the country name
   Multiple choice mode: True or False 
 '''
-def startQuiz(choiceNum, isMultChoice):
+def newSession(choiceNum, isMultChoice):
+    #clear screen
+    os.system('clear')
+    print('Session starts')
     
     #Enter Search mode
     if choiceNum == 0:
@@ -100,16 +45,16 @@ def startQuiz(choiceNum, isMultChoice):
             print('No result found')
             return
 
-
     #Enter Quiz mode
 
-    #Generate question and answer for the quiz
+    #Generate question and answer for the quiz mode
     ctryName = random.choice(list(ctryDict.keys()))
     captCity = ctryDict[ctryName]
             
     if isMultChoice is True:
         answerList = list()
-
+        
+        #Guess capital city by country name
         if choiceNum == 1:
 
             for i in range(4):
@@ -135,12 +80,7 @@ def startQuiz(choiceNum, isMultChoice):
                 else:
                     break
 
-            if answerList[choiceNo] == captCity:
-                answer(ctryName, captCity, True)
-                return True
-            else:
-                answer(ctryName, captCity, False)
-                return False
+            return evaluate(ctryName, captCity, True, answerList[choiceNo])
 
         #Guess country name by capital city        
         else:
@@ -167,34 +107,205 @@ def startQuiz(choiceNum, isMultChoice):
                 else:
                     break
 
-            if answerList[choiceNo] == ctryName:
-                answer(ctryName, captCity, True)
-                return True
-            else:
-                answer(ctryName, captCity, False)
-                return False
-
+            return evaluate(ctryName, captCity, False, answerList[choiceNo])
+    
+    #Multiple choice mode off
     else:
-        #Generate random keys and values
+        #Guess capital city by country name
         if choiceNum == 1:
             print('What is the capital city of ' + ctryName + " ?")
             keyIn = input()
             
-            if keyIn.lower() == captCity.lower():
-                answer(ctryName, captCity, True)
-                return True
-            else:
-                answer(ctryName, captCity, False)
-                return False
+            return evaluate(ctryName, captCity, True, keyIn)
         
+        #Guess country name by capital city
         if choiceNum == 2:
             print(captCity + " is the capital of which city ?")
             keyIn = input()
-            if keyIn.lower() == ctryName.lower():
-                answer(ctryName, captCity, True)
-                return True
-            else:
-                answer(ctryName, captCity, False)
-                return False
+            
+            return evaluate(ctryName, captCity, False, keyIn)
 
-startQuiz(2, True)                
+#---------------------Support methods in 1 session-----------------
+
+#-----------SUPPORT FOR SEARCH MODE --------------------
+#Search country name by capital name and display results
+def searchCtryByCapt(captCity):
+    result = list()
+    for ctry, city in ctryDict.items():
+        if city.lower() == captCity.lower():
+            result.append(ctry)
+    
+    if len(result) == 0:
+        return False
+    else:
+        for each in result:
+            print("The capital city of the country " + each + " is the city of " + ctryDict[each])
+            getDetails(each)
+            getDetails(ctryDict[each])
+
+
+#Search capital name by country name and display results
+def searchCaptByCtry(ctryName):
+    result = list()
+    for ctry, city in ctryDict.items():
+        if ctry.lower() == ctryName.lower():
+            result.append(ctry)
+        
+    if len(result) == 0:
+        return False
+    else:
+        for each in result:
+            print("The capital city of the country " + each + " is the city of " + ctryDict[each])
+            getDetails(each)
+            getDetails(ctryDict[each])
+#-------------------------------------------------------
+
+
+#--------------------SUPPORT FOR QUIZ MODE -----------------------------
+#DISPLAY CHOICES IN MULTIPLE CHOICE MODE
+def displayMultChoice(answerList):
+    print('\n'  +
+         '[A] ' + answerList[0] + '\n'
+         '[B] ' + answerList[1] + '\n'
+         '[C] ' + answerList[2] + '\n'
+         '[D] ' + answerList[3] + '\n'    )
+
+#CONVERT CHOICE INPUT TO CORRESPOND NUMBER FOR MULTIPLE CHOICE MODE
+def convertChoice(keyIn):
+    if keyIn.lower() == 'a':
+        return 0
+    elif keyIn.lower() == 'b':
+        return 1
+    elif keyIn.lower() == 'c':
+        return 2
+    elif keyIn.lower() == 'd':
+        return 3
+    else: #Invalid input
+        return -1
+
+
+#EVALUATE USER'S ANSWER
+def evaluate(ctryName, captCity, guessCapt, answer):
+    #Guessing capital city
+    if guessCapt is True:
+        if answer.lower() == captCity.lower():
+            announce(ctryName, captCity, True)
+            return True
+        else:
+            announce(ctryName, captCity, False)
+            return False
+    
+    #Guessing country name
+    else: 
+        if answer.lower() == ctryName.lower():
+            announce(ctryName, captCity, True)
+            return True
+        else:
+            announce(ctryName, captCity, False)
+            return False
+
+
+#ANNOUNCEMENT
+def announce(ctryName, captCity, correct):
+    if correct is True:
+        print('\nCongratulation, your answer is CORRECT !')
+        print(captCity + " is the capital city of " + ctryName)
+    else:
+        print('\nYour answer is INCORRECT')
+        print(captCity + " is the capital city of " + ctryName)
+    
+    #Wiki request
+    getDetails(ctryName)
+    getDetails(captCity)
+
+#-------END OF SUPPORTS FOR QUIZ MODE -------------------
+
+def getDetails(location):
+    print('\nDo you want to know more detail about ' + location + " ?")
+    print('[Y] Yes      [other] No')
+    keyIn = input()
+    if keyIn.lower() == 'y':
+        wiki(location)
+
+
+#GET MORE DETAILS OF THE PLACE ON WIKIPEDIA
+def wiki(location):
+    print('Directing to Wikipedia')
+    url = 'https://en.wikipedia.org/wiki/' + location
+    browser = webdriver.Chrome()
+    browser.get(url)
+    time.sleep(10)
+
+#--------------END of Support methods in 1 session
+
+#DRIVER METHOD
+def Start():
+    #___INIT___ 
+    total = 0
+    #total number 
+    correctTotal = 0
+    falseTotal = 0
+
+    while True:
+        #WELCOME MESSAGE
+        os.system('clear')
+        os.system('figlet Capital Cities')
+        print('Author: Duc Nguyen @2019'.rjust(70))
+        print('All rights reserved.'.rjust(70) + '\n')
+        print('[1] [Quiz mode]     [2][Multiple choice questions]     [3]Search mode   [4] Exit')
+        keyIn = input()
+
+        '''
+        Result of each round
+        0: search mode
+        True: correct answer
+        False: wrong answer
+              init with 0
+        '''
+        result = 0
+
+        if keyIn == '1':
+            print('Preparing Quiz mode')
+            result = newSession(guessCapt(),False)
+        elif keyIn == '2':
+            print('Preparing multiple choice questions')
+            result = newSession(guessCapt(), True)
+        elif keyIn == '3': #SEARCH MODE
+            newSession(0, False)
+        elif keyIn == '4':
+            finalScore(total, correctTotal, falseTotal)
+        else:
+            print('Invalid input. Try again')
+
+        if result is True:
+            correctTotal = correctTotal + 1
+        elif result is False:
+            falseTotal = falseTotal + 1
+
+        #Recalculate the total score
+        total = correctTotal - falseTotal
+
+        #Clear screen after 1 session
+        os.system('clear')
+        
+
+#DETERMINE MODE
+def guessCapt():
+    print('[Y]Guess capital city by country name      [other]Guess country name by capital city')
+    keyIn = input()
+
+    if keyIn.lower() == 'y':
+        return 1   #Guess capital name
+    else:
+        return 2   #Guess country name
+
+
+def finalScore(total, correctTotal, falseTotal):
+    os.system('clear')
+    os.system('figlet total score:   ' + str(total))
+    print('Number of correct answers: ' + str(correctTotal))
+    print('Number of wrong answers: ' + str(falseTotal))
+    print('Game ended')
+    exit(0)
+
+Start()
