@@ -1,4 +1,4 @@
-# CAPITAL CITY AND COUNTRY
+# CAPITAL CITY AND COUNTRY 🗺️🏙️
 
 ![intro](./intro.png)
 
